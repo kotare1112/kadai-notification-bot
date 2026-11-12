@@ -1,0 +1,26 @@
+{
+  "name": "kadai-notification-bot",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "大学の課題の締切を DM で通知する Discord Bot (Cloudflare Workers)",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "register": "node --experimental-strip-types scripts/register-commands.ts"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261104.1",
+    "@types/node": "^26.6.6",
+    "happy-dom": "^21.0.4",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0",
+    "wrangler": "^4.157.0"
+  },
+  "dependencies": {
+    "@cloudflare/puppeteer": "^2.0.0",
+    "discord-interactions": "^4.4.0"
+  }
+}

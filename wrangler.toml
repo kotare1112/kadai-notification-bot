@@ -1,0 +1,41 @@
+name = "kadai-notification-bot"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+
+# nodejs_compat: @cloudflare/puppeteer が Node 互換 API を使う
+compatibility_flags = ["nodejs_compat"]
+
+# 実行時刻(UTC)。分 時 日 月 曜日。
+# 20:30 UTC = 05:30 JST: myFIT 取り込み / 21:00 UTC = 06:00 JST: 締切の通知
+# 変えるときは src/cron.ts の CRON_SYNC / CRON_REMIND も同じ値にすること(test/cron.test.ts が検証)
+[triggers]
+crons = ["30 20 * * *", "0 21 * * *"]
+
+# 個人を特定できる値はリポジトリに置かず、シークレットで登録する(README の「セットアップ」参照)
+#   DISCORD_OWNER_ID   自分の Discord ユーザー ID。myFIT の取り込み先、エラー通知の宛先、/kadai sync を使える人
+#   DISCORD_CHANNEL_ID 締切の通知・取り込み失敗のお知らせを送るチャンネルの ID(メンション付きで投稿)。未登録なら DM で送る
+
+# Browser Rendering(myFIT のログインに使うヘッドレスブラウザ)
+[browser]
+binding = "BROWSER"
+
+[[d1_databases]]
+binding = "DB"
+# database_id は書かない: wrangler がアカウント内の同名のデータベースに自動で接続する
+database_name = "kadai-db"
+migrations_dir = "migrations"
+
+# /kadai sync はログインが fetch の waitUntil(応答後約 30 秒で打ち切り)に収まらないため、Queue のコンシューマで実行する
+# 事前に `npx wrangler queues create kadai-sync` が必要
+[[queues.producers]]
+binding = "SYNC_QUEUE"
+queue = "kadai-sync"
+
+[[queues.consumers]]
+queue = "kadai-sync"
+max_batch_size = 1
+max_batch_timeout = 0
+# 同じ ID での同時ログインを避けるため、取り込みは 1 件ずつ処理する
+max_concurrency = 1
+# 自動リトライは無効: 再試行すると myFIT に再ログインしてしまい、パスワード誤り時にアカウントがロックされるため
+max_retries = 0
